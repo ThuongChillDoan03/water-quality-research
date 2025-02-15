@@ -61,3 +61,33 @@ class BasicCNN(BaseModel):
     def calculate_detailed_report(self, predictions: List[torch.Tensor], ground_truth: List[torch.Tensor],
                                   **kwargs) -> Dict[str, Any]:
         return {}
+
+
+class MLPRegression(nn.Module):
+    def __init__(self, input_dim: int, hidden_size: int, num_layers: int, activation_func=torch.nn.functional.relu):
+        super(MLPRegression, self).__init__()
+        self.input_layer = nn.Linear(input_dim, hidden_size)
+        self.hidden_layers = [nn.Linear(hidden_size, hidden_size) for _ in range(num_layers)]
+        self.output_layer = nn.Linear(hidden_size, 1)
+        self.activation_func = activation_func
+
+    def forward(self, data: torch.Tensor) -> torch.Tensor:
+        logits = self.activation_func(self.input_layer(data))
+        for layer in self.hidden_layers:
+            logits = self.activation_func(layer(logits))
+        outputs = self.output_layer(logits).squeeze()
+        return outputs
+
+
+class BasicMLPRegression(BaseModel):
+    def __init__(self, input_dim: int, hidden_size: int, num_layers: int):
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        super(BasicMLPRegression, self).__init__(input_dim)
+
+    def _build_network(self) -> nn.Module:
+        return MLPRegression(self.input_dim, self.hidden_size, self.num_layers)
+
+    def calculate_detailed_report(self, predictions: List[torch.Tensor], ground_truth: List[torch.Tensor],
+                                  **kwargs) -> Dict[str, Any]:
+        return {}
